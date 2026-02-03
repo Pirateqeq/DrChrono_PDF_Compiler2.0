@@ -144,7 +144,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DRCHRONO_CLIENT_ID = "K1Ncm5IMr7AEngYZfOexxbKYNmX2vBMAO4MuxI7g"
 DRCHRONO_CLIENT_SECRET = '6EjgA3Wp0cXeNmmY6jA2yKGIHRMQDMV0eEIhQbHI96dJCNDMUVpaSFEQQOLo0axmfRPY5nfGGiivoC4cT1K1VavF3q8B6w190uKulgyOTmSKom9XcHwbcvSezpFJcMPp'
-DRCHRONO_REDIRECT_URI = "https://drchrono-pdf-compiler.onrender.com/oauth/callback/"
+DRCHRONO_REDIRECT_URI = "https://drchrono-pdf-compiler.onrender.com/oauth/callback"
 DRCHRONO_AUTH_URL = 'https://app.drchrono.com/o/authorize/'
 DRCHRONO_TOKEN_URL = 'https://app.drchrono.com/o/token/'
 DRCHRONO_SCOPES = 'clinical:read billing:read patients:read patients:summary:read calendar:read user:read'
