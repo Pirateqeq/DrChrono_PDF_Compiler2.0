@@ -5,5 +5,5 @@ app_name = 'verify_app'
 
 urlpatterns = [
     path('', views.connect_drchrono, name='connect_drchrono'),
-    path('oauth/callback', views.oauth_callback, name='oauth_callback'),
+    path('oauth/callback/', views.oauth_callback, name='oauth_callback'),
 ]
