@@ -23,10 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-5mgtfxem*f$14rqwq$reowcj-72cmr%ufiysgq9e_l)xf8cr=3'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['https://drchrono-pdf-compiler.onrender.com/', 'drchrono-pdf-compiler.onrender.com']
 
@@ -88,7 +88,7 @@ WSGI_APPLICATION = 'drchrono_compiler.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default='postgresql://drchrono_postgressql_user:Irp4Sat7DEWGpeYmcjxQmRc97L5BpAFy@dpg-d5panj14tr6s73antdfg-a/drchrono_postgressql',
+        default=os.getenv('DATABASE_URL'),
         conn_max_age=600
     )
 }
@@ -142,9 +142,9 @@ CSRF_FAILURE_VIEW = 'verify.views.csrf_failure'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-DRCHRONO_CLIENT_ID = "K1Ncm5IMr7AEngYZfOexxbKYNmX2vBMAO4MuxI7g"
-DRCHRONO_CLIENT_SECRET = '6EjgA3Wp0cXeNmmY6jA2yKGIHRMQDMV0eEIhQbHI96dJCNDMUVpaSFEQQOLo0axmfRPY5nfGGiivoC4cT1K1VavF3q8B6w190uKulgyOTmSKom9XcHwbcvSezpFJcMPp'
-DRCHRONO_REDIRECT_URI = "https://drchrono-pdf-compiler.onrender.com/oauth/callback"
+DRCHRONO_CLIENT_ID = os.getenv('DRCHRONO_CLIENT_ID')
+DRCHRONO_CLIENT_SECRET = os.getenv('DRCHRONO_CLIENT_SECRET')
+DRCHRONO_REDIRECT_URI = os.getenv('DRCHRONO_REDIRECT_URI')
 DRCHRONO_AUTH_URL = 'https://app.drchrono.com/o/authorize/'
 DRCHRONO_TOKEN_URL = 'https://app.drchrono.com/o/token/'
-DRCHRONO_SCOPES = 'clinical:read billing:read patients:read patients:summary:read calendar:read user:read'
+DRCHRONO_SCOPES = os.getenv('DRCHRONO_SCOPES')
