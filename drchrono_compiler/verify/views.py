@@ -16,19 +16,16 @@ def connect_drchrono(request):
         scope=settings.DRCHRONO_SCOPES.split()
     )
     authorization_url, state = oauth.authorization_url(settings.DRCHRONO_AUTH_URL)
-    request.session['oauth_state'] = state  # For CSRF protection
+    request.session['oauth_state'] = state
     return redirect(authorization_url)
 
 def oauth_callback(request):
-    if 'error' in request.GET:
-        messages.error(request, f"Authorization error: {request.GET.get('error_description', 'Unknown error')}")
-        return redirect('search_app:search')
-    
     oauth = OAuth2Session(
         settings.DRCHRONO_CLIENT_ID,
         redirect_uri=settings.DRCHRONO_REDIRECT_URI,
         state=request.session.get('oauth_state')
     )
+    
     try:
         token = oauth.fetch_token(
             settings.DRCHRONO_TOKEN_URL,
