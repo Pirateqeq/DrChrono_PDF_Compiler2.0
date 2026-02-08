@@ -5,9 +5,6 @@ from django.utils import timezone
 from .models import DrChronoCredential
 from .exceptions import DrChronoAuthError
 
-DRCHRONO_TOKEN_URL = "https://app.drchrono.com/o/token/"
-DRCHRONO_REVOKE_URL = "https://app.drchrono.com/o/revoke_token/"
-
 def refresh_token(cred: DrChronoCredential) -> DrChronoCredential:
     """
     Attempt to refresh token using stored refresh token.
@@ -24,12 +21,11 @@ def refresh_token(cred: DrChronoCredential) -> DrChronoCredential:
     }
 
     try:
-        resp = requests.post(DRCHRONO_TOKEN_URL, data=payload, timeout=10)
+        resp = requests.post(settings.DRCHRONO_TOKEN_URL, data=payload, timeout=10)
         resp.raise_for_status()
         data = resp.json()
 
-        #Update user credentials
-
+        #Update user credential
         cred.access_token = data['access_token']
         cred.refresh_token = data.get('refresh_token', cred.refresh_token)
         cred.expires_at = timezone.now() + timedelta(seconds=data['expires_in'])
@@ -53,19 +49,16 @@ def get_valid_access_token(request) -> str:
     
     try:
         cred = request.user.drchrono_cred
+        if not cred.is_expired:
+            return cred.access_token
+        refreshed_cred = refresh_token(cred)
+        return refreshed_cred.access_token
     except DrChronoCredential.DoesNotExist:
         raise DrChronoAuthError("No DrChrono credentials found for this user")
-
-    if not cred.is_expired:
-        return cred.access_token
-    
-    refreshed_cred = refresh_token(cred)
-    return refreshed_cred.access_token
 
 # Decorator for views that need API acess
 from functools import wraps
 from django.shortcuts import redirect
-from django.urls import reverse
 def require_auth(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
