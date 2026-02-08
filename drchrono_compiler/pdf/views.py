@@ -9,7 +9,7 @@ from .services import (
     generate_balance_report,
     generate_clinical_notes,
     fetch_hcfa_data,
-    generage_hcfa_bill,
+    generate_hcfa_bill,
 )
 from io import BytesIO
 import requests
@@ -71,7 +71,7 @@ class GenerateSelectedPDFView(View):
             for appt_id in selected_appts:
                 merger.append(generate_clinical_notes(request, selected_appts[appt_id]))
                 hcfa_data = fetch_hcfa_data(patient_json, selected_appts[appt_id], line_items[appt_id])
-                merger.append(generage_hcfa_bill(request, hcfa_data))
+                merger.append(generate_hcfa_bill(request, hcfa_data))
 
             output = BytesIO()
             merger.write(output)
@@ -86,5 +86,6 @@ class GenerateSelectedPDFView(View):
             return response
 
         except Exception as e:
+            patient_name = request.POST.get("patient_name")
             messages.error(request, f"PDF generation failed: {str(e)}.")
-            return redirect('appts:historical_list', patient_id=patient_id)
+            return redirect('appts_app:historical_list', patient_id=patient_id, patient_name=patient_name)

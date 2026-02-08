@@ -98,17 +98,7 @@ class HistoricalAppointmentsView(ListView):
             context = super().get_context_data(**kwargs)
             
             patient_id = self.kwargs['patient_id']
-            
-            # Get from URL query params (safer than session for this)
-            first_name = self.request.GET.get('first_name', '').strip()
-            last_name  = self.request.GET.get('last_name', '').strip()
-            
-            # Build full name, fallback to patient ID if missing
-            if first_name or last_name:
-                patient_name = f"{first_name} {last_name}".strip()
-            else:
-                patient_name = f"Patient {patient_id}"
-            
+            patient_name = self.kwargs['patient_name']
             context['patient_name'] = patient_name
             context['patient_id'] = patient_id
             context['page_title'] = f"Historical Appointments for {patient_name}"

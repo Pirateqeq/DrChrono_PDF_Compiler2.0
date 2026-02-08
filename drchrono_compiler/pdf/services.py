@@ -214,7 +214,7 @@ def fetch_hcfa_data(patient_json, appt_json, line_item_json) -> dict:
     """
     Input patient, appointment and line item JSON, return formated data
     """
-
+    
     data = {
         #Top Section
         'patient_name': f"{patient_json.get('last_name', '')}, {patient_json.get('first_name', '')}",
@@ -224,7 +224,7 @@ def fetch_hcfa_data(patient_json, appt_json, line_item_json) -> dict:
         'patient_state': patient_json.get('state', ''),
         'patient_city': patient_json.get('city', ''),
         'patient_zip': patient_json.get('zip_code', ''),
-        'patient_number': patient_json.get('cell_phone', '').replace('(', '').replace(')', ''),
+        'patient_number': patient_json.get('cell_phone').replace('(', '').replace(')', '') if len(patient_json.get('cell_phone')) == 14 else "000 000-0000",
         'patient_insured_relation': 'self', # HARD CODED
         'another_health_plan': '', # HARD CODED
 
@@ -270,7 +270,7 @@ from io import BytesIO
 from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 
-def generage_hcfa_bill(request, data: dict) -> BytesIO:
+def generate_hcfa_bill(request, data: dict) -> BytesIO:
     """
     Input patient, appointment and line item dict, return filled hcfa bill in bytes, if exception return nothing and print message warning.
     """
@@ -469,7 +469,7 @@ def generage_hcfa_bill(request, data: dict) -> BytesIO:
 
     # NPI
     c.drawString(388, height - 760, data['provider_npi'])
-    
+
     c.save()
     buffer.seek(0)
 
