@@ -50,7 +50,8 @@ class GenerateSelectedPDFView(View):
                     url = f"https://app.drchrono.com/api/line_items?appointment={appt_id}"
                     resp = requests.get(url, headers=headers)
                     if resp.status_code == 200:
-                        line_items[appt_id] = resp.json().get('results')[0]
+                        line_items[appt_id] = resp.json().get('results')
+
                     else:
                         messages.warning(request, f'Could not fetch transaction details for {appt_id}. Response status {resp.text}. - skipped.')
                 else:

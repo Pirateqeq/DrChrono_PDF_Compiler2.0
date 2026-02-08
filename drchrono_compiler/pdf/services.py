@@ -77,15 +77,13 @@ def generate_balance_report(patient_id: int, token: str, provider_name: str = "E
 
         if line_resp.status_code == 200:
             items = line_resp.json().get("results", [])
-            items[0]['reason'] = appt.get('reason', '---')
-            transactions.append(items[0])
+            for item in items:
+                item['reason'] = appt.get('reason', '---')
+                transactions.append(item)
     # ── Calculate total balance ──────────────────────────────────────────────────
     total_balance = Decimal("0.00")
-    for tx in transactions:
-        try:
-            total_balance += Decimal(str(tx.get("balance_total", "0")))
-        except (InvalidOperation, TypeError):
-            pass
+    for transaction in transactions:
+        total_balance += Decimal(str(transaction.get("balance_total", "0")))
     transactions = sorted(transactions, key=lambda x: x['service_date'], reverse=True)
 
     # ── Build history rows ───────────────────────────────────────────────────────
@@ -216,6 +214,7 @@ def fetch_hcfa_data(patient_json, appt_json, line_item_json) -> dict:
     """
     Input patient, appointment and line item JSON, return formated data
     """
+
     data = {
         #Top Section
         'patient_name': f"{patient_json.get('last_name', '')}, {patient_json.get('first_name', '')}",
@@ -236,11 +235,12 @@ def fetch_hcfa_data(patient_json, appt_json, line_item_json) -> dict:
         #Bottom Section
         'icd_indicator': '0', # HARD CODED
         'icd10_codes': appt_json.get('icd10_codes'),
-        'service_date': line_item_json.get('service_date'),
-        'code': line_item_json.get('code'),
-        'diagnosis_pointer': line_item_json.get('diagnosis_pointers'),
+        'service_date': [],
+        'code': [],
+        'diagnosis_pointer': [],
+        'charges': [],
+
         'service_place': '11', # HARD CODED
-        'charges': line_item_json.get('price'),
         'days_units': '1', # HARD CODED
         'provider_npi': '1326453796', # HARD CODED
 
@@ -257,6 +257,12 @@ def fetch_hcfa_data(patient_json, appt_json, line_item_json) -> dict:
         'provider_number': '678 404-7643',
         'provider_info': 'Back Pain MD'
     }
+
+    for item in line_item_json:
+        data['service_date'].append(item.get('service_date'))
+        data['code'].append(item.get('code'))
+        data['diagnosis_pointer'].append(item.get('diagnosis_pointers'))
+        data['charges'].append(item.get('price'))
 
     return data
 
@@ -391,33 +397,40 @@ def generage_hcfa_bill(request, data: dict) -> BytesIO:
     c.drawString(327, height - 474, data['icd_indicator'])
 
     # Box 24 Dates of Service
-    data['service_date'] = data['service_date'].split('-')
-    c.drawString(32, height - 555, data['service_date'][1])
-    c.drawString(53, height - 555, data['service_date'][2])
-    c.drawString(74, height - 555, data['service_date'][0][2:])
-    c.drawString(95, height - 555, data['service_date'][1])
-    c.drawString(116, height - 555, data['service_date'][2])
-    c.drawString(139, height - 555, data['service_date'][0][2:])
+    for i, date in enumerate(data['service_date']):
+        date = date.split('-')
+        c.drawString(32, height - 555 - (i * 24), date[1])
+        c.drawString(53, height - 555 - (i * 24), date[2])
+        c.drawString(74, height - 555 - (i * 24), date[0][2:])
+        c.drawString(95, height - 555 - (i * 24), date[1])
+        c.drawString(116, height - 555 - (i * 24), date[2])
+        c.drawString(139, height - 555 - (i * 24), date[0][2:])
 
-    # Place of service
-    c.drawString(161, height - 555, data['service_place'])
+    # Place of service. (SAME SERVICE PLACE HARD CODED JUST REPEAT PER CHARGE)
+    for i in range(len(data['charges'])):
+        c.drawString(161, height - 555 - (i * 24), data['service_place'])
 
     # Procedures
-    c.drawString(210, height - 555, data['code'])
+    for i, procedure in enumerate(data['code']):
+        c.drawString(210, height - 555 - (i * 24), procedure)
 
-    # Diagnosis Pointer
-    c.drawString(355, height - 555, 'a')
+    # Diagnosis Pointer. (SAME DIAGNOSIS POINTER HARD CODED JUST REPEAT PER CHARGE)
+    for i in range(len(data['charges'])):
+        c.drawString(355, height - 555 - (i * 24), 'a')
     
     # Charges
-    data['charges'] = data['charges'].split('.')
-    c.drawString(387, height - 555, data['charges'][0])
-    c.drawString(427, height - 555, data['charges'][1])
+    for i, charge in enumerate(data['charges']):
+        value = charge.split('.')
+        c.drawString(387, height - 555 - (i * 24), value[0])
+        c.drawString(427, height - 555 - (i * 24), value[1])
 
     # Days or units
-    c.drawString(455, height - 555, data['days_units'])
+    for i in range(len(data['charges'])):
+        c.drawString(455, height - 555 - (i * 24), data['days_units'])
 
     # Provider NPI
-    c.drawString(523, height - 555, data['provider_npi'])
+    for i in range(len(data['charges'])):
+        c.drawString(523, height - 555 - (i * 24), data['provider_npi'])
 
     # Box 25 Federal ID Number
     c.drawString(37, height - 698, data['federal_id'])
@@ -426,8 +439,14 @@ def generage_hcfa_bill(request, data: dict) -> BytesIO:
     c.drawString(190, height - 698, data['patient_account_number'])
 
     # Box 28 Total Charge
-    c.drawString(390, height - 698, data['charges'][0])
-    c.drawString(443, height - 698, data['charges'][1])
+    total_charge = 0
+    for charge in data['charges']:
+        total_charge += float(charge)
+    total_charge = str(total_charge)
+    total_charge = total_charge.split('.')
+
+    c.drawString(390, height - 698, total_charge[0])
+    c.drawString(443, height - 698, total_charge[1] if len(total_charge[1]) != 1 else f'{total_charge[1]}0')
 
     # Box 31 Provider Signature
     c.drawString(37, height - 745, data['physician_signature'])
